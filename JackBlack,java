@@ -1,0 +1,219 @@
+//the tester class
+
+import java.util.*;
+import java.io.*;
+public class JackBlack {
+  
+	public static int calcValue(ArrayList<Card> hand)
+	{
+		ArrayList<Card> temp = hand;
+		boolean hasAce = false;
+		int total = 0;
+		for(int x = 0; x< temp.size();x++)
+		{
+			Card tempcard = temp.get(x);
+			if(tempcard.getValue().compareToIgnoreCase("Ace")==0)
+			{
+				hasAce = true;
+				total++;
+			}
+			else
+			{
+				if(isInteger(tempcard.getValue()))
+				{
+					total+=Integer.parseInt(tempcard.getValue());
+				}
+				else
+				{
+					total+=10;
+				}
+			}
+		}
+		if(hasAce && total<=11)
+		{
+			return total+10;
+		}
+		else
+		{
+			return total;
+		}
+	}
+	
+	public static boolean isInteger (String s)
+	{
+		try{
+			Integer.parseInt(s);
+			return true;
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+	}
+	public static void main(String[] args) {
+		Deck myDeck = new Deck();
+		ArrayList<Card> player = new ArrayList<Card>();
+		ArrayList<Card> dealer = new ArrayList<Card>();
+		double playerfund = 0;
+		
+		
+		System.out.print("Welcome to BlackJack\nPlease enter your buy-in amount: ");
+		try{
+			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+			String input = br.readLine().trim();
+			playerfund = Double.parseDouble(input);
+			System.out.println();
+			if(playerfund>100)
+			{
+				while(true)
+				{
+					if(playerfund < 10)
+					{
+						System.out.println("Out of money!");
+						break;
+					}
+					if(myDeck.size()<12)
+					{
+						myDeck = new Deck();
+					}
+					System.out.print("Enter your bet on this hand: ");
+					input = br.readLine().trim();
+					double bet = Double.parseDouble(input);
+					
+					System.out.println();
+					while(bet<10 || bet>1000 || bet > playerfund)
+					{
+						System.out.print("Invalid bet, try a different value: ");
+						input = br.readLine().trim();
+						bet = Double.parseDouble(input);
+					}
+					System.out.println();
+					
+					player.add(myDeck.draw());
+					player.add(myDeck.draw());
+					
+					dealer.add(myDeck.draw());
+					dealer.add(myDeck.draw());
+					
+					System.out.println("You drew: 1.) "+player.get(0).getValue()+" of "+player.get(0).getType()
+							+"\n2.) "+player.get(1).getValue()+" of "+player.get(1).getType());
+					int dhvalue = 0;
+					int fhval = 0;
+					if(player.get(0).getValue().equals(player.get(1).getValue()))
+					{
+						System.out.println("Would you like to split the equal value cards (yes or no)? ");
+						input = br.readLine().trim();
+						if(input.compareToIgnoreCase("yes") == 0)
+						{
+							ArrayList<Card> player2 = new ArrayList<Card>();
+							player2.add(player.get(1));
+							player.remove(1);
+							int handval = 0;
+							while(true)
+							{
+								handval = JackBlack.calcValue(player2);
+								if(handval >= 21)
+								{
+									if(myDeck.size()<12)
+										myDeck = new Deck();
+									dhvalue = handval;
+									break;
+								}
+								System.out.print("Your split hand has: 1.) "+player2.get(0).getValue()+" of "+player2.get(0).getType());
+								for(int x =1; x<player2.size();x++)
+								{
+									System.out.print("\n"+(x+1)+".) "+player2.get(x).getValue()+" of "+player2.get(x).getType());
+								}
+								System.out.print("\nDo you want to continue (yes or no)? ");
+								input = br.readLine().trim();
+								System.out.println();
+								if(input.compareToIgnoreCase("yes")==0)
+								{
+									player2.add(myDeck.draw());
+								}
+								else
+								{
+									if(myDeck.size()<12)
+										myDeck = new Deck();
+									dhvalue = handval;
+									break;
+								}
+							}
+								
+						}
+					}
+					while(true)
+					{
+						
+						fhval = JackBlack.calcValue(player);
+						if(fhval>=21)
+						{
+							if(myDeck.size()<12)
+								myDeck = new Deck();
+							break;
+						}
+						System.out.print("Your hand has: 1.) "+player.get(0).getValue()+" of "+player.get(0).getType());
+						for(int m = 1; m<player.size();m++)
+						{
+							System.out.print("\n"+(m+1)+".) "+player.get(m).getValue()+" of "+player.get(m).getType());
+						}
+						
+						System.out.println("\nDo you want to continue (yes or no)? ");
+						input = br.readLine().trim();
+						System.out.println();
+						if(input.compareToIgnoreCase("yes")==0)
+						{
+							player.add(myDeck.draw());
+						}
+						else
+						{
+							if(myDeck.size()<12)
+								myDeck = new Deck();
+							break;
+						}
+					}
+					
+					int dval = JackBlack.calcValue(dealer);
+					while(dval<17)
+					{
+						dealer.add(myDeck.draw());
+						dval = JackBlack.calcValue(dealer);
+					}
+					if(dhvalue >21 || fhval >21)
+					{
+						playerfund = playerfund - bet;
+					}
+					else {
+						if(dval >21)
+						{
+							playerfund = playerfund + bet*1.5;
+						}
+						else
+						{
+							if(dhvalue > dval || fhval > dval)
+							{
+								playerfund = playerfund + bet*1.5;
+							}
+							else
+								playerfund = playerfund - bet;
+						}
+					}
+					System.out.println("You have: $"+playerfund+" left\nDo you want to continue (yes or no)? ");
+					input = br.readLine();
+					if(input.compareToIgnoreCase("no")==0)
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				System.out.println("Insufficient funds");
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+}
